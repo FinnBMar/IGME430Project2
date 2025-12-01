@@ -1,0 +1,347 @@
+/* hosted/style.css */
+
+/* Global reset-ish */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: radial-gradient(circle at top, #1f263b 0, #0b1020 50%, #050610 100%);
+  color: #f5f5f7;
+}
+
+/* Utility */
+.hidden {
+  display: none;
+}
+
+.center-text {
+  text-align: center;
+}
+
+a {
+  color: #ffce6b;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.primary-link {
+  font-weight: 600;
+}
+
+/* Navbar */
+.navbar {
+  width: 100%;
+  height: 56px;
+  background: rgba(4, 7, 18, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.nav-logo {
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.nav-links {
+  display: flex;
+  gap: 12px;
+}
+
+.nav-link {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.95rem;
+  background: transparent;
+  color: #f5f5f7;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+}
+
+.nav-link:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.04);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+/* Content root */
+.content-root {
+  max-width: 1100px;
+  margin: 32px auto;
+  padding: 0 16px 48px;
+}
+
+/* Alert / error box */
+.alert {
+  max-width: 500px;
+  margin: 16px auto 0 auto;
+  padding: 10px 14px;
+  background: #391726;
+  border-left: 4px solid #ff6b8b;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+/* Login / signup forms */
+.mainForm {
+  max-width: 400px;
+  margin: 72px auto 0 auto;
+  padding: 24px 24px 28px;
+  background: rgba(11, 15, 30, 0.92);
+  border-radius: 16px;
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mainForm h2 {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.mainForm label {
+  font-size: 0.9rem;
+  margin-top: 6px;
+}
+
+.mainForm input[type="text"],
+.mainForm input[type="password"] {
+  margin-top: 2px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 13, 30, 0.9);
+  color: #f5f5f7;
+}
+
+.mainForm input[type="text"]:focus,
+.mainForm input[type="password"]:focus {
+  outline: none;
+  border-color: #ffce6b;
+  box-shadow: 0 0 0 1px rgba(255, 206, 107, 0.4);
+}
+
+/* Buttons */
+.button,
+.formSubmit {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.95rem;
+  cursor: pointer;
+  background: #ffce6b;
+  color: #120d08;
+  font-weight: 600;
+  text-align: center;
+  transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.formSubmit {
+  margin-top: 14px;
+  width: 100%;
+}
+
+.button.primary {
+  background: #ffce6b;
+  color: #120d08;
+}
+
+.button.danger {
+  background: #f25b5b;
+  color: #120d08;
+}
+
+.button.small {
+  font-size: 0.85rem;
+  padding: 4px 10px;
+}
+
+.button:hover,
+.formSubmit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.45);
+}
+
+.button:active,
+.formSubmit:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Layout for app */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Panels */
+.panel {
+  background: rgba(10, 13, 30, 0.94);
+  border-radius: 16px;
+  padding: 16px 18px 20px;
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.panel h2 {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+}
+
+.form-panel textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.form-panel label {
+  display: block;
+  font-size: 0.85rem;
+  margin-top: 8px;
+  margin-bottom: 2px;
+}
+
+.form-panel input[type="text"],
+.form-panel textarea,
+.form-panel select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(7, 10, 24, 0.9);
+  color: #f5f5f7;
+}
+
+.form-panel input[type="text"]:focus,
+.form-panel textarea:focus,
+.form-panel select:focus {
+  outline: none;
+  border-color: #ffce6b;
+  box-shadow: 0 0 0 1px rgba(255, 206, 107, 0.4);
+}
+
+.form-panel .button {
+  margin-top: 12px;
+}
+
+/* Lists & cards */
+.list-panel .card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card {
+  background: rgba(9, 12, 28, 0.98);
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.1s ease;
+}
+
+.card h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+
+.card p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.campaign-card {
+  cursor: pointer;
+}
+
+.campaign-card.selected,
+.campaign-card:hover {
+  border-color: rgba(255, 206, 107, 0.7);
+  background: rgba(18, 13, 8, 0.98);
+  transform: translateY(-1px);
+}
+
+.quest-card {
+  position: relative;
+}
+
+.quest-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quest-reward {
+  margin-top: 4px;
+  font-size: 0.9rem;
+}
+
+.quest-notes {
+  margin-top: 4px;
+  font-size: 0.9rem;
+  color: #d1d5e3;
+}
+
+/* Status tags */
+.status-tag {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.status-planned {
+  background: rgba(120, 144, 255, 0.16);
+  color: #a5b4ff;
+}
+
+.status-active {
+  background: rgba(72, 187, 120, 0.18);
+  color: #9ae6b4;
+}
+
+.status-completed {
+  background: rgba(255, 206, 107, 0.18);
+  color: #ffe29c;
+}
+
+/* Muted text */
+.muted {
+  color: rgba(226, 228, 238, 0.7);
+  font-size: 0.9rem;
+}
