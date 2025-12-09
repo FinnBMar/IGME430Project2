@@ -1,7 +1,7 @@
 // server/controllers/Quest.js
 const models = require('../models');
 
-const { Campaign, Quest } = models;
+const { Campaign, Quest, Location } = models;
 
 // Render the main React app page
 const appPage = (req, res) => res.render('app');
@@ -15,8 +15,7 @@ const createCampaign = async (req, res) => {
   }
 
   try {
-    // Enforce a simple profit model:
-    // free users can only have up to 2 campaigns
+    // Enforce profit model: free users can only have up to 2 campaigns
     const ownerId = req.session.account._id;
     const ownerPremium = req.session.account.isPremium;
 
@@ -38,7 +37,6 @@ const createCampaign = async (req, res) => {
     await newCampaign.save();
     return res.status(201).json({ campaign: Campaign.toAPI(newCampaign) });
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ error: 'Error creating campaign.' });
   }
 };
@@ -54,8 +52,34 @@ const getCampaigns = async (req, res) => {
 
     return res.json({ campaigns });
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ error: 'Error retrieving campaigns.' });
+  }
+};
+
+// Delete a campaign and all associated quests + locations
+const deleteCampaign = async (req, res) => {
+  const { campaignId } = req.body;
+
+  if (!campaignId) {
+    return res.status(400).json({ error: 'campaignId is required.' });
+  }
+
+  try {
+    const ownerId = req.session.account._id;
+
+    const campaign = await Campaign.findOne({ _id: campaignId, owner: ownerId }).exec();
+    if (!campaign) {
+      return res.status(404).json({ error: 'Campaign not found.' });
+    }
+
+    // Delete child documents
+    await Quest.deleteMany({ campaign: campaign._id, owner: ownerId }).exec();
+    await Location.deleteMany({ campaign: campaign._id, owner: ownerId }).exec();
+    await Campaign.deleteOne({ _id: campaign._id, owner: ownerId }).exec();
+
+    return res.json({ message: 'Campaign and its quests/locations deleted.' });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error deleting campaign.' });
   }
 };
 
@@ -90,7 +114,6 @@ const createQuest = async (req, res) => {
     await newQuest.save();
     return res.status(201).json({ quest: Quest.toAPI(newQuest) });
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ error: 'Error creating quest.' });
   }
 };
@@ -119,7 +142,6 @@ const getQuests = async (req, res) => {
 
     return res.json({ quests });
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ error: 'Error retrieving quests.' });
   }
 };
@@ -142,7 +164,6 @@ const deleteQuest = async (req, res) => {
 
     return res.json({ message: 'Quest deleted successfully.' });
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ error: 'Error deleting quest.' });
   }
 };
@@ -151,6 +172,7 @@ module.exports = {
   appPage,
   createCampaign,
   getCampaigns,
+  deleteCampaign,
   createQuest,
   getQuests,
   deleteQuest,

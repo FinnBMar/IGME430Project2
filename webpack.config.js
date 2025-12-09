@@ -2,8 +2,9 @@ const path = require('path');
 
 module.exports = {
   entry: {
-    app: './client/quest.jsx',     // was ./client/maker.jsx
+    app: './client/quest.jsx',
     login: './client/login.jsx',
+    account: './client/account.jsx',
   },
   module: {
     rules: [
@@ -23,6 +24,6 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, 'hosted'),
-    filename: '[name]Bundle.js',  // appBundle.js and loginBundle.js
+    filename: '[name]Bundle.js', // appBundle.js, loginBundle.js, accountBundle.js
   },
 };

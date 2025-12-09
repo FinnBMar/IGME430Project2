@@ -50,7 +50,12 @@ const CampaignForm = (props) => {
   );
 };
 
-const CampaignList = ({ campaigns, selectedId, onSelect }) => {
+const CampaignList = ({
+  campaigns,
+  selectedId,
+  onSelect,
+  onDelete,
+}) => {
   if (!campaigns || campaigns.length === 0) {
     return (
       <div className="panel list-panel">
@@ -68,8 +73,22 @@ const CampaignList = ({ campaigns, selectedId, onSelect }) => {
         className={`card campaign-card ${isSelected ? 'selected' : ''}`}
         onClick={() => onSelect(c)}
       >
-        <h3>{c.name}</h3>
-        {c.description && <p>{c.description}</p>}
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
+          <div>
+            <h3>{c.name}</h3>
+            {c.description && <p>{c.description}</p>}
+          </div>
+          <button
+            type="button"
+            className="button danger small"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(c._id);
+            }}
+          >
+            Delete
+          </button>
+        </div>
       </div>
     );
   });
@@ -208,24 +227,165 @@ const QuestList = ({ campaign, quests, triggerReload }) => {
   );
 };
 
+// --- Locations ---
+
+// Create a new location
+const handleLocation = (e, campaignId, onCreated) => {
+  e.preventDefault();
+  helper.hideError();
+
+  const name = e.target.querySelector('#locationName').value;
+  const type = e.target.querySelector('#locationType').value;
+  const description = e.target.querySelector('#locationDescription').value;
+  const notes = e.target.querySelector('#locationNotes').value;
+
+  if (!name) {
+    helper.handleError('Location name is required.');
+    return false;
+  }
+
+  helper.sendPost('/api/locations', {
+    campaignId,
+    name,
+    type,
+    description,
+    notes,
+  }, onCreated);
+
+  return false;
+};
+
+const LocationForm = ({ campaign, triggerReload }) => {
+  if (!campaign) return null;
+
+  return (
+    <form
+      id="locationForm"
+      name="locationForm"
+      onSubmit={(e) => handleLocation(e, campaign._id, triggerReload)}
+      className="panel form-panel"
+    >
+      <h2>Add a location to {campaign.name}</h2>
+
+      <label htmlFor="locationName">Name:</label>
+      <input
+        id="locationName"
+        type="text"
+        name="name"
+        placeholder="Briarwood Village"
+      />
+
+      <label htmlFor="locationType">Type:</label>
+      <input
+        id="locationType"
+        type="text"
+        name="type"
+        placeholder="Town, Dungeon, Forest..."
+      />
+
+      <label htmlFor="locationDescription">Description:</label>
+      <textarea
+        id="locationDescription"
+        name="description"
+        placeholder="A brief description of the location..."
+      />
+
+      <label htmlFor="locationNotes">Notes:</label>
+      <textarea
+        id="locationNotes"
+        name="notes"
+        placeholder="Any notable NPCs, secrets, or hooks..."
+      />
+
+      <input className="button primary" type="submit" value="Add Location" />
+    </form>
+  );
+};
+
+const LocationList = ({ campaign, locations, triggerReload }) => {
+  if (!campaign) {
+    return (
+      <div className="panel list-panel">
+        <h2>Locations</h2>
+        <p className="muted">Select a campaign to view its locations.</p>
+      </div>
+    );
+  }
+
+  const deleteLocation = (id) => {
+    helper.sendPost('/api/locations/delete', { locationId: id }, triggerReload);
+  };
+
+  if (!locations || locations.length === 0) {
+    return (
+      <div className="panel list-panel">
+        <h2>Locations in {campaign.name}</h2>
+        <p className="muted">No locations yet. Add one to get started.</p>
+      </div>
+    );
+  }
+
+  const nodes = locations.map((loc) => (
+    <div key={loc._id} className="card quest-card">
+      <div className="quest-header">
+        <h3>{loc.name}</h3>
+        {loc.type && (
+          <span className="status-tag">
+            {loc.type}
+          </span>
+        )}
+      </div>
+      {loc.description && (
+        <p className="quest-notes">{loc.description}</p>
+      )}
+      {loc.notes && (
+        <p className="quest-notes">{loc.notes}</p>
+      )}
+      <button
+        type="button"
+        className="button danger small"
+        onClick={() => deleteLocation(loc._id)}
+      >
+        Delete
+      </button>
+    </div>
+  ));
+
+  return (
+    <div className="panel list-panel">
+      <h2>Locations in {campaign.name}</h2>
+      <div className="card-list">
+        {nodes}
+      </div>
+    </div>
+  );
+};
+
+// --- App ---
+
 const App = () => {
   const [campaigns, setCampaigns] = useState([]);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [quests, setQuests] = useState([]);
+  const [locations, setLocations] = useState([]);
 
   const [reloadCampaigns, setReloadCampaigns] = useState(false);
   const [reloadQuests, setReloadQuests] = useState(false);
+  const [reloadLocations, setReloadLocations] = useState(false);
 
   const loadCampaigns = async () => {
     const response = await fetch('/api/campaigns');
     const data = await response.json();
-    setCampaigns(data.campaigns || []);
+    const list = data.campaigns || [];
+    setCampaigns(list);
+
     // If the selected campaign was deleted, clear it
     if (selectedCampaign) {
-      const stillThere = data.campaigns.find((c) => c._id === selectedCampaign._id);
+      const stillThere = list.find((c) => c._id === selectedCampaign._id);
       if (!stillThere) {
         setSelectedCampaign(null);
         setQuests([]);
+        setLocations([]);
       }
     }
   };
@@ -241,6 +401,17 @@ const App = () => {
     setQuests(data.quests || []);
   };
 
+  const loadLocations = async () => {
+    if (!selectedCampaign) {
+      setLocations([]);
+      return;
+    }
+    const params = new URLSearchParams({ campaignId: selectedCampaign._id });
+    const response = await fetch(`/api/locations?${params.toString()}`);
+    const data = await response.json();
+    setLocations(data.locations || []);
+  };
+
   useEffect(() => {
     loadCampaigns();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -251,8 +422,20 @@ const App = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCampaign, reloadQuests]);
 
+  useEffect(() => {
+    loadLocations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCampaign, reloadLocations]);
+
   const triggerCampaignReload = () => setReloadCampaigns(!reloadCampaigns);
   const triggerQuestReload = () => setReloadQuests(!reloadQuests);
+  const triggerLocationReload = () => setReloadLocations(!reloadLocations);
+
+  const deleteCampaign = (id) => {
+    helper.sendPost('/api/campaigns/delete', { campaignId: id }, () => {
+      triggerCampaignReload();
+    });
+  };
 
   return (
     <div className="layout">
@@ -262,6 +445,7 @@ const App = () => {
           campaigns={campaigns}
           selectedId={selectedCampaign && selectedCampaign._id}
           onSelect={setSelectedCampaign}
+          onDelete={deleteCampaign}
         />
       </section>
       <section className="column">
@@ -270,6 +454,12 @@ const App = () => {
           campaign={selectedCampaign}
           quests={quests}
           triggerReload={triggerQuestReload}
+        />
+        <LocationForm campaign={selectedCampaign} triggerReload={triggerLocationReload} />
+        <LocationList
+          campaign={selectedCampaign}
+          locations={locations}
+          triggerReload={triggerLocationReload}
         />
       </section>
     </div>

@@ -30449,10 +30449,10 @@ if (false) // removed by dead control flow
 var __webpack_exports__ = {};
 // This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
 (() => {
-/*!**************************!*\
-  !*** ./client/quest.jsx ***!
-  \**************************/
-// client/quest.jsx
+/*!****************************!*\
+  !*** ./client/account.jsx ***!
+  \****************************/
+// client/account.jsx
 const helper = __webpack_require__(/*! ./helper.js */ "./client/helper.js");
 const React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 const {
@@ -30462,425 +30462,141 @@ const {
 const {
   createRoot
 } = __webpack_require__(/*! react-dom/client */ "./node_modules/react-dom/client.js");
-
-// Create a new campaign
-const handleCampaign = (e, onCreated) => {
+const AccountInfo = ({
+  account,
+  onTogglePremium,
+  premiumUpdating
+}) => {
+  if (!account) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "panel"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "Loading account..."));
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "panel"
+  }, /*#__PURE__*/React.createElement("h2", null, "Account"), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Username:"), " ", account.username), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Status:"), ' ', account.isPremium ? 'Premium' : 'Free'), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "button",
+    onClick: onTogglePremium,
+    disabled: premiumUpdating
+  }, premiumUpdating ? 'Updating...' : account.isPremium ? 'Disable Premium (demo)' : 'Enable Premium (demo)'), /*#__PURE__*/React.createElement("p", {
+    className: "muted",
+    style: {
+      marginTop: '8px',
+      fontSize: '0.85rem'
+    }
+  }, "Premium is a demo toggle only. No real payments are processed."));
+};
+const handlePasswordChange = (e, onSuccess) => {
   e.preventDefault();
   helper.hideError();
-  const name = e.target.querySelector('#campaignName').value;
-  const description = e.target.querySelector('#campaignDescription').value;
-  if (!name) {
-    helper.handleError('Campaign name is required.');
+  const oldPass = e.target.querySelector('#oldPass').value;
+  const newPass = e.target.querySelector('#newPass').value;
+  const newPass2 = e.target.querySelector('#newPass2').value;
+  if (!oldPass || !newPass || !newPass2) {
+    helper.handleError('All fields are required.');
     return false;
   }
-  helper.sendPost('/api/campaigns', {
-    name,
-    description
-  }, onCreated);
-  return false;
-};
-const CampaignForm = props => {
-  return /*#__PURE__*/React.createElement("form", {
-    id: "campaignForm",
-    name: "campaignForm",
-    onSubmit: e => handleCampaign(e, props.triggerReload),
-    className: "panel form-panel"
-  }, /*#__PURE__*/React.createElement("h2", null, "Create a new campaign"), /*#__PURE__*/React.createElement("label", {
-    htmlFor: "campaignName"
-  }, "Name:"), /*#__PURE__*/React.createElement("input", {
-    id: "campaignName",
-    type: "text",
-    name: "name",
-    placeholder: "The Shattered Realms"
-  }), /*#__PURE__*/React.createElement("label", {
-    htmlFor: "campaignDescription"
-  }, "Description:"), /*#__PURE__*/React.createElement("textarea", {
-    id: "campaignDescription",
-    name: "description",
-    placeholder: "Optional summary of your world..."
-  }), /*#__PURE__*/React.createElement("input", {
-    className: "button primary",
-    type: "submit",
-    value: "Create Campaign"
-  }));
-};
-const CampaignList = ({
-  campaigns,
-  selectedId,
-  onSelect,
-  onDelete
-}) => {
-  if (!campaigns || campaigns.length === 0) {
-    return /*#__PURE__*/React.createElement("div", {
-      className: "panel list-panel"
-    }, /*#__PURE__*/React.createElement("h2", null, "Your Campaigns"), /*#__PURE__*/React.createElement("p", {
-      className: "muted"
-    }, "No campaigns yet. Create your first one!"));
+  if (newPass !== newPass2) {
+    helper.handleError('New passwords do not match.');
+    return false;
   }
-  const nodes = campaigns.map(c => {
-    const isSelected = selectedId === c._id;
-    return /*#__PURE__*/React.createElement("div", {
-      key: c._id,
-      className: `card campaign-card ${isSelected ? 'selected' : ''}`,
-      onClick: () => onSelect(c)
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        gap: '8px'
+  helper.sendPost('/account/changePassword', {
+    oldPass,
+    newPass,
+    newPass2
+  }, res => {
+    if (res.message) {
+      // Clear fields
+      e.target.reset();
+      helper.handleError(res.message); // reuse alert box as a general message
+      const alertBox = document.getElementById('alertMessage');
+      if (alertBox) {
+        alertBox.classList.remove('hidden');
       }
-    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, c.name), c.description && /*#__PURE__*/React.createElement("p", null, c.description)), /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      className: "button danger small",
-      onClick: e => {
-        e.stopPropagation();
-        onDelete(c._id);
-      }
-    }, "Delete")));
+      if (onSuccess) onSuccess();
+    }
   });
-  return /*#__PURE__*/React.createElement("div", {
-    className: "panel list-panel"
-  }, /*#__PURE__*/React.createElement("h2", null, "Your Campaigns"), /*#__PURE__*/React.createElement("div", {
-    className: "card-list"
-  }, nodes));
-};
-
-// Create a new quest
-const handleQuest = (e, campaignId, onCreated) => {
-  e.preventDefault();
-  helper.hideError();
-  const title = e.target.querySelector('#questTitle').value;
-  const status = e.target.querySelector('#questStatus').value;
-  const reward = e.target.querySelector('#questReward').value;
-  const notes = e.target.querySelector('#questNotes').value;
-  if (!title) {
-    helper.handleError('Quest title is required.');
-    return false;
-  }
-  helper.sendPost('/api/quests', {
-    campaignId,
-    title,
-    status,
-    reward,
-    notes
-  }, onCreated);
   return false;
 };
-const QuestForm = ({
-  campaign,
-  triggerReload
-}) => {
-  if (!campaign) return null;
-  return /*#__PURE__*/React.createElement("form", {
-    id: "questForm",
-    name: "questForm",
-    onSubmit: e => handleQuest(e, campaign._id, triggerReload),
-    className: "panel form-panel"
-  }, /*#__PURE__*/React.createElement("h2", null, "Add a quest to ", campaign.name), /*#__PURE__*/React.createElement("label", {
-    htmlFor: "questTitle"
-  }, "Title:"), /*#__PURE__*/React.createElement("input", {
-    id: "questTitle",
-    type: "text",
-    name: "title",
-    placeholder: "Retrieve the Lost Artifact"
-  }), /*#__PURE__*/React.createElement("label", {
-    htmlFor: "questStatus"
-  }, "Status:"), /*#__PURE__*/React.createElement("select", {
-    id: "questStatus",
-    name: "status",
-    defaultValue: "planned"
-  }, /*#__PURE__*/React.createElement("option", {
-    value: "planned"
-  }, "Planned"), /*#__PURE__*/React.createElement("option", {
-    value: "active"
-  }, "Active"), /*#__PURE__*/React.createElement("option", {
-    value: "completed"
-  }, "Completed")), /*#__PURE__*/React.createElement("label", {
-    htmlFor: "questReward"
-  }, "Reward:"), /*#__PURE__*/React.createElement("input", {
-    id: "questReward",
-    type: "text",
-    name: "reward",
-    placeholder: "500 gold, favor with the king..."
-  }), /*#__PURE__*/React.createElement("label", {
-    htmlFor: "questNotes"
-  }, "Notes:"), /*#__PURE__*/React.createElement("textarea", {
-    id: "questNotes",
-    name: "notes",
-    placeholder: "Any additional details or twists..."
-  }), /*#__PURE__*/React.createElement("input", {
-    className: "button primary",
-    type: "submit",
-    value: "Add Quest"
-  }));
-};
-const QuestList = ({
-  campaign,
-  quests,
-  triggerReload
-}) => {
-  if (!campaign) {
-    return /*#__PURE__*/React.createElement("div", {
-      className: "panel list-panel"
-    }, /*#__PURE__*/React.createElement("h2", null, "Quests"), /*#__PURE__*/React.createElement("p", {
-      className: "muted"
-    }, "Select a campaign to view its quests."));
-  }
-  const deleteQuest = id => {
-    helper.sendPost('/api/quests/delete', {
-      questId: id
-    }, triggerReload);
-  };
-  if (!quests || quests.length === 0) {
-    return /*#__PURE__*/React.createElement("div", {
-      className: "panel list-panel"
-    }, /*#__PURE__*/React.createElement("h2", null, "Quests in ", campaign.name), /*#__PURE__*/React.createElement("p", {
-      className: "muted"
-    }, "No quests yet. Add one to get started."));
-  }
-  const nodes = quests.map(q => /*#__PURE__*/React.createElement("div", {
-    key: q._id,
-    className: "card quest-card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "quest-header"
-  }, /*#__PURE__*/React.createElement("h3", null, q.title), /*#__PURE__*/React.createElement("span", {
-    className: `status-tag status-${q.status}`
-  }, q.status)), q.reward && /*#__PURE__*/React.createElement("p", {
-    className: "quest-reward"
-  }, /*#__PURE__*/React.createElement("strong", null, "Reward:"), " ", q.reward), q.notes && /*#__PURE__*/React.createElement("p", {
-    className: "quest-notes"
-  }, q.notes), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "button danger small",
-    onClick: () => deleteQuest(q._id)
-  }, "Delete")));
-  return /*#__PURE__*/React.createElement("div", {
-    className: "panel list-panel"
-  }, /*#__PURE__*/React.createElement("h2", null, "Quests in ", campaign.name), /*#__PURE__*/React.createElement("div", {
-    className: "card-list"
-  }, nodes));
-};
-
-// --- Locations ---
-
-// Create a new location
-const handleLocation = (e, campaignId, onCreated) => {
-  e.preventDefault();
-  helper.hideError();
-  const name = e.target.querySelector('#locationName').value;
-  const type = e.target.querySelector('#locationType').value;
-  const description = e.target.querySelector('#locationDescription').value;
-  const notes = e.target.querySelector('#locationNotes').value;
-  if (!name) {
-    helper.handleError('Location name is required.');
-    return false;
-  }
-  helper.sendPost('/api/locations', {
-    campaignId,
-    name,
-    type,
-    description,
-    notes
-  }, onCreated);
-  return false;
-};
-const LocationForm = ({
-  campaign,
-  triggerReload
-}) => {
-  if (!campaign) return null;
-  return /*#__PURE__*/React.createElement("form", {
-    id: "locationForm",
-    name: "locationForm",
-    onSubmit: e => handleLocation(e, campaign._id, triggerReload),
-    className: "panel form-panel"
-  }, /*#__PURE__*/React.createElement("h2", null, "Add a location to ", campaign.name), /*#__PURE__*/React.createElement("label", {
-    htmlFor: "locationName"
-  }, "Name:"), /*#__PURE__*/React.createElement("input", {
-    id: "locationName",
-    type: "text",
-    name: "name",
-    placeholder: "Briarwood Village"
-  }), /*#__PURE__*/React.createElement("label", {
-    htmlFor: "locationType"
-  }, "Type:"), /*#__PURE__*/React.createElement("input", {
-    id: "locationType",
-    type: "text",
-    name: "type",
-    placeholder: "Town, Dungeon, Forest..."
-  }), /*#__PURE__*/React.createElement("label", {
-    htmlFor: "locationDescription"
-  }, "Description:"), /*#__PURE__*/React.createElement("textarea", {
-    id: "locationDescription",
-    name: "description",
-    placeholder: "A brief description of the location..."
-  }), /*#__PURE__*/React.createElement("label", {
-    htmlFor: "locationNotes"
-  }, "Notes:"), /*#__PURE__*/React.createElement("textarea", {
-    id: "locationNotes",
-    name: "notes",
-    placeholder: "Any notable NPCs, secrets, or hooks..."
-  }), /*#__PURE__*/React.createElement("input", {
-    className: "button primary",
-    type: "submit",
-    value: "Add Location"
-  }));
-};
-const LocationList = ({
-  campaign,
-  locations,
-  triggerReload
-}) => {
-  if (!campaign) {
-    return /*#__PURE__*/React.createElement("div", {
-      className: "panel list-panel"
-    }, /*#__PURE__*/React.createElement("h2", null, "Locations"), /*#__PURE__*/React.createElement("p", {
-      className: "muted"
-    }, "Select a campaign to view its locations."));
-  }
-  const deleteLocation = id => {
-    helper.sendPost('/api/locations/delete', {
-      locationId: id
-    }, triggerReload);
-  };
-  if (!locations || locations.length === 0) {
-    return /*#__PURE__*/React.createElement("div", {
-      className: "panel list-panel"
-    }, /*#__PURE__*/React.createElement("h2", null, "Locations in ", campaign.name), /*#__PURE__*/React.createElement("p", {
-      className: "muted"
-    }, "No locations yet. Add one to get started."));
-  }
-  const nodes = locations.map(loc => /*#__PURE__*/React.createElement("div", {
-    key: loc._id,
-    className: "card quest-card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "quest-header"
-  }, /*#__PURE__*/React.createElement("h3", null, loc.name), loc.type && /*#__PURE__*/React.createElement("span", {
-    className: "status-tag"
-  }, loc.type)), loc.description && /*#__PURE__*/React.createElement("p", {
-    className: "quest-notes"
-  }, loc.description), loc.notes && /*#__PURE__*/React.createElement("p", {
-    className: "quest-notes"
-  }, loc.notes), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "button danger small",
-    onClick: () => deleteLocation(loc._id)
-  }, "Delete")));
-  return /*#__PURE__*/React.createElement("div", {
-    className: "panel list-panel"
-  }, /*#__PURE__*/React.createElement("h2", null, "Locations in ", campaign.name), /*#__PURE__*/React.createElement("div", {
-    className: "card-list"
-  }, nodes));
-};
-
-// --- App ---
-
-const App = () => {
-  const [campaigns, setCampaigns] = useState([]);
-  const [selectedCampaign, setSelectedCampaign] = useState(null);
-  const [quests, setQuests] = useState([]);
-  const [locations, setLocations] = useState([]);
-  const [reloadCampaigns, setReloadCampaigns] = useState(false);
-  const [reloadQuests, setReloadQuests] = useState(false);
-  const [reloadLocations, setReloadLocations] = useState(false);
-  const loadCampaigns = async () => {
-    const response = await fetch('/api/campaigns');
+const PasswordForm = ({
+  onPasswordChanged
+}) => /*#__PURE__*/React.createElement("form", {
+  id: "passwordForm",
+  name: "passwordForm",
+  onSubmit: e => handlePasswordChange(e, onPasswordChanged),
+  className: "panel form-panel"
+}, /*#__PURE__*/React.createElement("h2", null, "Change Password"), /*#__PURE__*/React.createElement("label", {
+  htmlFor: "oldPass"
+}, "Current Password:"), /*#__PURE__*/React.createElement("input", {
+  id: "oldPass",
+  type: "password",
+  name: "oldPass"
+}), /*#__PURE__*/React.createElement("label", {
+  htmlFor: "newPass"
+}, "New Password:"), /*#__PURE__*/React.createElement("input", {
+  id: "newPass",
+  type: "password",
+  name: "newPass"
+}), /*#__PURE__*/React.createElement("label", {
+  htmlFor: "newPass2"
+}, "Confirm New Password:"), /*#__PURE__*/React.createElement("input", {
+  id: "newPass2",
+  type: "password",
+  name: "newPass2"
+}), /*#__PURE__*/React.createElement("input", {
+  className: "button primary",
+  type: "submit",
+  value: "Update Password"
+}));
+const AccountApp = () => {
+  const [account, setAccount] = useState(null);
+  const [premiumUpdating, setPremiumUpdating] = useState(false);
+  const loadAccount = async () => {
+    const response = await fetch('/account/data');
     const data = await response.json();
-    const list = data.campaigns || [];
-    setCampaigns(list);
-
-    // If the selected campaign was deleted, clear it
-    if (selectedCampaign) {
-      const stillThere = list.find(c => c._id === selectedCampaign._id);
-      if (!stillThere) {
-        setSelectedCampaign(null);
-        setQuests([]);
-        setLocations([]);
+    setAccount(data.account);
+  };
+  useEffect(() => {
+    loadAccount();
+  }, []);
+  const onTogglePremium = () => {
+    setPremiumUpdating(true);
+    helper.sendPost('/account/togglePremium', {}, res => {
+      if (res && typeof res.isPremium === 'boolean') {
+        setAccount(prev => ({
+          ...prev,
+          isPremium: res.isPremium
+        }));
       }
-    }
-  };
-  const loadQuests = async () => {
-    if (!selectedCampaign) {
-      setQuests([]);
-      return;
-    }
-    const params = new URLSearchParams({
-      campaignId: selectedCampaign._id
-    });
-    const response = await fetch(`/api/quests?${params.toString()}`);
-    const data = await response.json();
-    setQuests(data.quests || []);
-  };
-  const loadLocations = async () => {
-    if (!selectedCampaign) {
-      setLocations([]);
-      return;
-    }
-    const params = new URLSearchParams({
-      campaignId: selectedCampaign._id
-    });
-    const response = await fetch(`/api/locations?${params.toString()}`);
-    const data = await response.json();
-    setLocations(data.locations || []);
-  };
-  useEffect(() => {
-    loadCampaigns();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reloadCampaigns]);
-  useEffect(() => {
-    loadQuests();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCampaign, reloadQuests]);
-  useEffect(() => {
-    loadLocations();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCampaign, reloadLocations]);
-  const triggerCampaignReload = () => setReloadCampaigns(!reloadCampaigns);
-  const triggerQuestReload = () => setReloadQuests(!reloadQuests);
-  const triggerLocationReload = () => setReloadLocations(!reloadLocations);
-  const deleteCampaign = id => {
-    helper.sendPost('/api/campaigns/delete', {
-      campaignId: id
-    }, () => {
-      triggerCampaignReload();
+      setPremiumUpdating(false);
     });
   };
   return /*#__PURE__*/React.createElement("div", {
     className: "layout"
   }, /*#__PURE__*/React.createElement("section", {
     className: "column"
-  }, /*#__PURE__*/React.createElement(CampaignForm, {
-    triggerReload: triggerCampaignReload
-  }), /*#__PURE__*/React.createElement(CampaignList, {
-    campaigns: campaigns,
-    selectedId: selectedCampaign && selectedCampaign._id,
-    onSelect: setSelectedCampaign,
-    onDelete: deleteCampaign
+  }, /*#__PURE__*/React.createElement(AccountInfo, {
+    account: account,
+    onTogglePremium: onTogglePremium,
+    premiumUpdating: premiumUpdating
   })), /*#__PURE__*/React.createElement("section", {
     className: "column"
-  }, /*#__PURE__*/React.createElement(QuestForm, {
-    campaign: selectedCampaign,
-    triggerReload: triggerQuestReload
-  }), /*#__PURE__*/React.createElement(QuestList, {
-    campaign: selectedCampaign,
-    quests: quests,
-    triggerReload: triggerQuestReload
-  }), /*#__PURE__*/React.createElement(LocationForm, {
-    campaign: selectedCampaign,
-    triggerReload: triggerLocationReload
-  }), /*#__PURE__*/React.createElement(LocationList, {
-    campaign: selectedCampaign,
-    locations: locations,
-    triggerReload: triggerLocationReload
+  }, /*#__PURE__*/React.createElement(PasswordForm, {
+    onPasswordChanged: () => {}
   })));
 };
 const init = () => {
-  const root = createRoot(document.getElementById('app'));
-  root.render(/*#__PURE__*/React.createElement(App, null));
+  const rootElem = document.getElementById('accountRoot');
+  if (!rootElem) return;
+  const root = createRoot(rootElem);
+  root.render(/*#__PURE__*/React.createElement(AccountApp, null));
 };
 window.onload = init;
 })();
 
 /******/ })()
 ;
-//# sourceMappingURL=appBundle.js.map
+//# sourceMappingURL=accountBundle.js.map

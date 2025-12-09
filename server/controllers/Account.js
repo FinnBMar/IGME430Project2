@@ -24,7 +24,6 @@ const signup = async (req, res) => {
     req.session.account = Account.toAPI(newAccount);
     return res.json({ redirect: '/app' });
   } catch (err) {
-    console.log(err);
     if (err.code === 11000) {
       return res.status(400).json({ error: 'Username is already in use.' });
     }
@@ -56,9 +55,87 @@ const login = (req, res) => {
   });
 };
 
+// Render account/settings page
+const accountPage = (req, res) => res.render('account');
+
+// Return basic account data as JSON
+const getAccount = async (req, res) => {
+  try {
+    const doc = await Account.findById(req.session.account._id)
+      .select('username isPremium')
+      .lean()
+      .exec();
+
+    if (!doc) {
+      return res.status(404).json({ error: 'Account not found.' });
+    }
+
+    return res.json({ account: doc });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error retrieving account data.' });
+  }
+};
+
+// Change password
+const changePassword = async (req, res) => {
+  const { oldPass, newPass, newPass2 } = req.body;
+
+  if (!oldPass || !newPass || !newPass2) {
+    return res.status(400).json({ error: 'All fields are required.' });
+  }
+  if (newPass !== newPass2) {
+    return res.status(400).json({ error: 'New passwords do not match.' });
+  }
+
+  try {
+    const { username } = req.session.account;
+
+    // Verify old password
+    return Account.authenticate(username, oldPass, async (err, accountDoc) => {
+      if (err || !accountDoc) {
+        return res.status(401).json({ error: 'Old password is incorrect.' });
+      }
+
+      const hash = await Account.generateHash(newPass);
+
+      // ✅ Avoid no-param-reassign by not doing accountDoc.password = hash
+      accountDoc.set({ password: hash });
+      await accountDoc.save();
+
+      return res.json({ message: 'Password updated successfully.' });
+    });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error changing password.' });
+  }
+};
+
+// Toggle premium flag and update session
+const togglePremium = async (req, res) => {
+  try {
+    const account = await Account.findById(req.session.account._id).exec();
+    if (!account) {
+      return res.status(404).json({ error: 'Account not found.' });
+    }
+
+    account.isPremium = !account.isPremium;
+    await account.save();
+
+    // Update session
+    req.session.account = Account.toAPI(account);
+
+    return res.json({ isPremium: account.isPremium });
+  } catch (err) {
+    return res.status(500).json({ error: 'Error updating premium status.' });
+  }
+};
+
 module.exports = {
   loginPage,
   login,
   logout,
   signup,
+  accountPage,
+  getAccount,
+  changePassword,
+  togglePremium,
 };

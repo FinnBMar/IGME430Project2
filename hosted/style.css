@@ -5,12 +5,16 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
-  height: 100%;
+  min-height: 100vh; /* let the page grow */
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: radial-gradient(circle at top, #1f263b 0, #0b1020 50%, #050610 100%);
+  background-attachment: fixed;  /* keep gradient tied to viewport */
+  background-repeat: no-repeat;
+  background-size: cover;        /* make sure it fills all scrollable area */
   color: #f5f5f7;
 }
 
@@ -82,9 +86,10 @@ a:hover {
 
 /* Content root */
 .content-root {
-  max-width: 1100px;
-  margin: 32px auto;
-  padding: 0 16px 48px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 32px auto 64px;
+  padding: 0 24px;
 }
 
 /* Alert / error box */
@@ -190,11 +195,14 @@ a:hover {
   box-shadow: none;
 }
 
-/* Layout for app */
+/* ===== QUESTLOG MAIN LAYOUT ===== */
+
+/* Two columns: campaigns on the left, quests+locations on the right */
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 20px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.6fr);
+  gap: 24px;
+  align-items: flex-start;
 }
 
 @media (max-width: 900px) {
@@ -206,17 +214,18 @@ a:hover {
 .column {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
 }
 
 /* Panels */
 .panel {
-  background: rgba(10, 13, 30, 0.94);
+  background: rgba(10, 13, 30, 0.96);
   border-radius: 16px;
   padding: 16px 18px 20px;
   box-shadow:
     0 10px 26px rgba(0, 0, 0, 0.55),
     0 0 0 1px rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .panel h2 {
@@ -224,6 +233,7 @@ a:hover {
   font-size: 1.1rem;
 }
 
+/* Form panels */
 .form-panel textarea {
   resize: vertical;
   min-height: 60px;
@@ -266,12 +276,24 @@ a:hover {
   gap: 10px;
 }
 
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .card {
   background: rgba(9, 12, 28, 0.98);
   border-radius: 12px;
   padding: 10px 12px;
   border: 1px solid transparent;
   transition: border-color 0.18s ease, background 0.18s ease, transform 0.1s ease;
+}
+
+.card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 206, 107, 0.7);
+  background: rgba(18, 13, 8, 0.98);
 }
 
 .card h3 {
@@ -288,15 +310,17 @@ a:hover {
   cursor: pointer;
 }
 
-.campaign-card.selected,
-.campaign-card:hover {
-  border-color: rgba(255, 206, 107, 0.7);
+.campaign-card.selected {
+  border-color: rgba(255, 206, 107, 0.9);
   background: rgba(18, 13, 8, 0.98);
-  transform: translateY(-1px);
 }
 
+/* Quest & Location cards share styles */
 .quest-card {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .quest-header {
@@ -344,4 +368,5 @@ a:hover {
 .muted {
   color: rgba(226, 228, 238, 0.7);
   font-size: 0.9rem;
+  font-style: italic;
 }
